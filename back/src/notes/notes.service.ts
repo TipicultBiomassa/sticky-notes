@@ -4,32 +4,41 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Note} from "./entities/note.entity";
 import {Repository} from "typeorm";
+import {Connection} from 'typeorm';
 
 @Injectable()
 export class NotesService {
   constructor(
       @InjectRepository(Note)
-      private readonly noteRepository: Repository<Note>
-  ) {
+      private readonly noteRepository: Repository<Note>,
+      private readonly connection: Connection,
+) {
   }
-  create(createNoteDto: CreateNoteDto) {
-    return 'This action adds a new note';
+  async create(createNoteDto: CreateNoteDto) {
+    const note = new Note();
+    note.content = createNoteDto.content;
+    return await this.noteRepository.save(note)
   }
 
   async findAll() {
-    const dbNotes = await this.noteRepository.find();
-    return `This action returns all notes`;
+    return await this.noteRepository.find();
+    // return `This action returns all notes`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} note`;
+  async findOne(id: number) {
+      return await this.noteRepository.findOneById(id);
   }
 
-  update(id: number, updateNoteDto: UpdateNoteDto) {
-    return `This action updates a #${id} note`;
+  async update(id: number, updateNoteDto: UpdateNoteDto) {
+      const note = await this.noteRepository.findOneById(id);
+      const updatedPlaylist = await this.noteRepository.save(
+          Object.assign(note, updateNoteDto),
+      );
+      return updatedPlaylist;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} note`;
+ async remove(id: number) {
+    return await this.noteRepository.delete(id);
+    //return `This action removes a #${id} note`;
   }
 }
